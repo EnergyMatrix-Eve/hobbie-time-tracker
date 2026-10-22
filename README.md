@@ -21,6 +21,7 @@ Track the time people spend on their hobbies. Pick (or add) an entrant and a hob
 ```
 hobbie-time-tracker/
 ├── package.json          ← project metadata, dependencies, npm scripts
+├── .npmrc                ← npm settings: skip dependency install scripts (see Troubleshooting)
 ├── data/                 ← SQLite database file is created here (git-ignored)
 ├── server/               ← BACK END (runs in Node.js)
 │   ├── server.js         ← entry point: starts Express, serves /public, mounts /api routes
@@ -172,7 +173,8 @@ Timestamps are stored in **UTC**. Convert to local time when displaying.
 | Problem | Fix |
 |---|---|
 | `Port 3000 is already in use` | Another copy of the server is still running. Close that terminal or press Ctrl + C in it, or use a different `PORT` (see above). |
-| `npm install` fails while building **better-sqlite3** | This usually means your Node version has no prebuilt binary. Install the current **LTS** Node from nodejs.org, delete `node_modules`, and run `npm install` again. |
+| `git clone` says `destination path 'hobbie-time-tracker' already exists` | A folder with that name is already there (e.g. an unzipped copy). Run `git -C hobbie-time-tracker status`. If it says *not a git repository*, delete or rename that folder and clone again. If it is a clone, `cd` into it and run `git pull` instead. |
+| `npm install` fails with `node-gyp rebuild` / `gyp ERR! find VS` (better-sqlite3) | better-sqlite3 already ships ready-made binaries, but npm 10/11 wrongly tries to compile it when installing from `package-lock.json`. The project's `.npmrc` (`ignore-scripts=true`) prevents this. Make sure `.npmrc` exists (it starts with a dot, so it may be hidden in Explorer), delete `node_modules`, and run `npm install` again. You do **not** need Visual Studio. |
 | `npm` / `node` not recognised (Windows) | Close and reopen the terminal after installing Node so it picks up the new PATH. |
 | Page loads but badge says **Server not reachable** | Make sure you opened `http://localhost:3000` (served by Node), not the `index.html` file directly from disk. |
 | Changes to the page don't show | Hard refresh: **Ctrl + Shift + R** (Windows) / **Cmd + Shift + R** (macOS). |
