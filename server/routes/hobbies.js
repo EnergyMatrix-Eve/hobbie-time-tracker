@@ -1,18 +1,26 @@
-// Routes for /api/hobbie
-//   POST /api/hobbie  → add a new hobby   body: { "name": "Guitar" }
+// Routes for /api/hobbies (also reachable as /api/hobbie, the name in the original spec)
+//   GET  /api/hobbies  → list all hobbies
+//   POST /api/hobbies  → add a hobby, or return the existing one   body: { "name": "Fishing" }
 
 import { Router } from 'express';
-// import db from '../db/database.js';   // ← un-comment when replacing placeholders
+import store from '../db/index.js';
+import { cleanName } from '../validation.js';
 
 const router = Router();
 
-router.post('/', (req, res) => {
-  // TODO: validate req.body.name, then
-  //   db.prepare('INSERT INTO hobbies (name) VALUES (?)').run(name)
-  res.status(201).json({
-    message: 'Placeholder: hobby would be saved to the database here',
-    received: req.body,
+router.get('/', async (req, res) => {
+  res.json(await store.listHobbies());
+});
+
+router.post('/', async (req, res) => {
+  const name = cleanName(req.body?.name, {
+    maxLength: 40,
+    emptyMessage: 'Please enter a hobby.',
+    tooLongMessage: 'Hobby names can be at most 40 characters.',
   });
+
+  const { row, created } = await store.findOrCreateHobby(name);
+  res.status(created ? 201 : 200).json(row); // 201 = newly created, 200 = already known
 });
 
 export default router;

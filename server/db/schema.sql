@@ -40,3 +40,23 @@ CREATE TABLE IF NOT EXISTS time_entries (
 -- Speeds up "total time per entrant per hobby" queries (the accumulated-time feature).
 CREATE INDEX IF NOT EXISTS idx_time_entries_entrant_hobby
     ON time_entries (entrant_id, hobby_id);
+
+-- Total time per player per hobby (the Hobby Log). A view is a saved query:
+-- read it like a table, and it's always up to date. Supabase has the same view.
+CREATE VIEW IF NOT EXISTS hobby_totals AS
+SELECT
+    e.id                    AS entrant_id,
+    e.name                  AS entrant,
+    h.id                    AS hobby_id,
+    h.name                  AS hobby,
+    COUNT(*)                AS sessions,
+    SUM(t.duration_seconds) AS total_seconds
+FROM time_entries t
+JOIN entrants e ON e.id = t.entrant_id
+JOIN hobbies  h ON h.id = t.hobby_id
+GROUP BY e.id, h.id;
+
+-- A few starter hobbies, added only while the hobbies table is still empty.
+INSERT INTO hobbies (name)
+SELECT column1 FROM (VALUES ('Guitar'), ('Painting'), ('Running'), ('Reading'))
+WHERE NOT EXISTS (SELECT 1 FROM hobbies);

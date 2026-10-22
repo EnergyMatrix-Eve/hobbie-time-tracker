@@ -143,18 +143,15 @@
         <div class="hobby-picker">
           <div class="field">
             <label for="hobby-select">Choose a hobby</label>
+            <!-- Filled from GET /api/hobbies; each option's value is the hobby's id -->
             <select id="hobby-select">
               <option value="">— Select a hobby —</option>
-              <option>Guitar</option>
-              <option>Painting</option>
-              <option>Running</option>
-              <option>Reading</option>
             </select>
           </div>
           <form id="hobby-form" class="field inline-form">
             <label for="hobby-name">…or add a new one</label>
             <div class="inline-row">
-              <input id="hobby-name" type="text" placeholder="e.g. Fishing" autocomplete="off">
+              <input id="hobby-name" type="text" maxlength="40" placeholder="e.g. Fishing" autocomplete="off">
               <button type="submit" class="btn btn-teal">Add</button>
             </div>
           </form>
@@ -171,18 +168,18 @@
 
         <!-- Timer display -->
         <div class="timer">
-          <span class="timer-label">Time spent</span>
+          <span id="timer-label" class="timer-label">Time spent</span>
           <div id="timer-display" class="timer-display" role="timer">00:00:00</div>
         </div>
 
         <div class="controls">
           <button id="btn-start" class="btn btn-start" type="button">
-            <svg class="btn-icon" aria-hidden="true"><use href="#icon-play"/></svg>Start
+            <svg class="btn-icon" aria-hidden="true"><use href="#icon-play"/></svg><span class="btn-label">Start</span>
           </button>
-          <button id="btn-pause" class="btn btn-pause" type="button">
+          <button id="btn-pause" class="btn btn-pause" type="button" disabled>
             <svg class="btn-icon" aria-hidden="true"><use href="#icon-pause"/></svg>Pause
           </button>
-          <button id="btn-stop" class="btn btn-stop" type="button">
+          <button id="btn-stop" class="btn btn-stop" type="button" disabled>
             <svg class="btn-icon" aria-hidden="true"><use href="#icon-stop"/></svg>Stop
           </button>
         </div>
@@ -200,10 +197,10 @@
         <div class="table-scroll">
           <table class="log-table">
             <thead>
-              <tr><th scope="col">Player</th><th scope="col">Hobby</th><th scope="col">Total time</th></tr>
+              <tr><th scope="col">Player</th><th scope="col">Hobby</th><th scope="col">Sessions</th><th scope="col">Total time</th></tr>
             </thead>
             <tbody id="totals-body">
-              <tr><td colspan="3" class="muted">Loading…</td></tr>
+              <tr><td colspan="4" class="muted">Loading…</td></tr>
             </tbody>
           </table>
         </div>
@@ -211,7 +208,7 @@
     </main>
 
     <footer class="app-footer">
-      <p>v0.2 · placeholder data until the database is connected</p>
+      <p>Hobbies Time Tracker · v0.4</p>
     </footer>
   </div>
 
@@ -249,7 +246,8 @@
     <h2 id="finish-title">Session complete!</h2>
     <p>Great job, <span id="finish-name">friend</span>! You spent</p>
     <p class="finish-time" id="finish-time">00:00:00</p>
-    <p class="muted">Placeholder: a full session summary will go here.</p>
+    <p>on <strong id="finish-hobby">your hobby</strong>.</p>
+    <p id="finish-total" class="finish-total"></p>
     <form method="dialog">
       <button class="btn btn-start">Yay!</button>
     </form>

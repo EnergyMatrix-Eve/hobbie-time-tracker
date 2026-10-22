@@ -5,11 +5,9 @@
 //          → Loading page (today's weather)
 //          → Tracker (background matches the weather)
 //
-// What works now:  players saved in the database, typewriter
-//                  dialogue, circle-wipe transitions, today's
-//                  weather on the loading page and in the sky.
-// Coming next:     real timer (start / pause / stop) and saving
-//                  sessions to the database.
+// Everything is real: players, hobbies and sessions are saved in
+// the database (SQLite or Supabase, chosen by the server), the
+// timer counts actual time, and the Hobby Log shows real totals.
 // =============================================================
 
 import { FALLBACK_LOCATION, getTodaysWeather, locationPermission, weatherIcon, weatherLine } from './weather.js';
@@ -51,29 +49,54 @@ const playerGreeting  = $('#player-greeting');
 const hobbySelect     = $('#hobby-select');
 const hobbyForm       = $('#hobby-form');
 const hobbyInput      = $('#hobby-name');
+const hobbyAddButton  = $('#hobby-form button');
+const stage           = $('.stage');
 const hobbyEmoji      = $('.hobby-emoji');
 const stageCaption    = $('#stage-caption');
+const timerLabel      = $('#timer-label');
 const timerDisplay    = $('#timer-display');
 const encouragement   = $('#encouragement');
 const totalsBody      = $('#totals-body');
 const finishDialog    = $('#finish-dialog');
 const finishName      = $('#finish-name');
 const finishTime      = $('#finish-time');
+const finishHobby     = $('#finish-hobby');
+const finishTotal     = $('#finish-total');
 const btnStart        = $('#btn-start');
+const startLabel      = $('#btn-start .btn-label');
 const btnPause        = $('#btn-pause');
 const btnStop         = $('#btn-stop');
 
 // Live check of the OS "reduce motion" setting
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-// Emoji shown on the island for each hobby (custom hobbies get a star)
-const HOBBY_EMOJI = { Guitar: '🎸', Painting: '🎨', Running: '🏃', Reading: '📚' };
+const APP_TITLE = document.title;
+
+// Emoji shown on the island for each hobby, by lower-case name (others get a star)
+const HOBBY_EMOJI = {
+  guitar: '🎸', painting: '🎨', running: '🏃', reading: '📚', fishing: '🎣', cooking: '🍳',
+  baking: '🧁', gardening: '🌻', knitting: '🧶', photography: '📷', gaming: '🎮', swimming: '🏊',
+  cycling: '🚴', singing: '🎤', dancing: '💃', chess: '♟️', yoga: '🧘', piano: '🎹',
+  drawing: '✏️', writing: '✍️', hiking: '🥾',
+};
+const emojiFor = (hobbyName) => HOBBY_EMOJI[hobbyName.toLowerCase()] ?? '⭐';
 
 // Pastel colours for each player's initial circle (brown text is readable on all of them)
 const CHIP_COLORS = ['#ffd23f', '#b5e48c', '#a8dcf5', '#ffc4b8', '#e8c8f0', '#ffe0a3'];
 
 // ---------- App state ----------
 const player = { id: null, name: '' };
+
+// The timer works from timestamps rather than counting ticks, so it stays
+// accurate even when the browser slows down timers in a background tab.
+const timer = {
+  status: 'idle',   // 'idle' | 'running' | 'paused'
+  hobby: null,      // { id, name } being timed
+  startedAt: null,  // Date when Start was first pressed
+  bankedMs: 0,      // active time from earlier running stretches (pauses excluded)
+  runningSince: 0,  // Date.now() when the current running stretch began
+  tickId: null,     // setInterval handle that refreshes the display
+};
 
 // ---------- Helpers ----------
 
@@ -321,8 +344,18 @@ async function enterTracker(entrant, line, origin) {
   playerGreeting.textContent = player.name;
   finishName.textContent = player.name;
 
+  // Fetch the hobbies and the Hobby Log while the weather page is showing.
+  // (.then(…, …) handles failure right away; the result is checked after the wipe.)
+  const dataReady = Promise.all([loadHobbies(), loadTotals()]).then(() => null, (error) => error);
+
   await switchScreen(welcomeScreen, trackerScreen, origin, showWeatherPage);
   greeting.focus(); // move keyboard/screen-reader focus to the new screen
+
+  const loadError = await dataReady;
+  if (loadError) {
+    console.error(loadError);
+    showMessage(loadError.message);
+  }
 }
 
 // ---------- Weather: loading page + sky ----------
@@ -411,16 +444,40 @@ btnSwitch.addEventListener('click', async () => {
   say(welcome.line);
 });
 
-hobbySelect.addEventListener('change', () => {
-  const hobby = hobbySelect.value;
-  hobbyEmoji.textContent = hobby ? (HOBBY_EMOJI[hobby] ?? '⭐') : '🌱';
-  stageCaption.textContent = hobby ? `${hobby} time!` : 'Pick a hobby to begin';
+// ---------- Hobbies ----------
 
+// The hobby picked in the dropdown, as { id, name }, or null.
+function selectedHobby() {
+  const option = hobbySelect.selectedOptions[0];
+  return option?.value ? { id: Number(option.value), name: option.textContent } : null;
+}
+
+function showHobbyOnStage() {
+  const hobby = selectedHobby();
+  hobbyEmoji.textContent = hobby ? emojiFor(hobby.name) : '🌱';
+  stageCaption.textContent = hobby ? `${hobby.name} time!` : 'Pick a hobby to begin';
+}
+
+// Fill the dropdown from GET /api/hobbies (option value = hobby id), keeping the current choice.
+async function loadHobbies() {
+  const hobbies = await api('/api/hobbies');
+  const keep = hobbySelect.value;
+  hobbySelect.replaceChildren(
+    new Option('— Select a hobby —', ''),
+    ...hobbies.map((hobby) => new Option(hobby.name, String(hobby.id))),
+  );
+  hobbySelect.value = hobbies.some((hobby) => String(hobby.id) === keep) ? keep : '';
+  showHobbyOnStage();
+}
+
+hobbySelect.addEventListener('change', () => {
+  showHobbyOnStage();
   if (!reduceMotion.matches) {
     hobbyEmoji.animate([{ scale: 0.3 }, { scale: 1.25 }, { scale: 1 }], { duration: 450, easing: 'ease-out' });
   }
 });
 
+// Add a hobby: the server saves it (201) or finds the existing one (200). Either way, select it.
 hobbyForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   const name = hobbyInput.value.trim();
@@ -429,58 +486,213 @@ hobbyForm.addEventListener('submit', async (event) => {
     return;
   }
 
+  let result;
   try {
-    const result = await api('/api/hobbie', { method: 'POST', body: JSON.stringify({ name }) });
-    console.log('POST /api/hobbie →', result);
+    result = await request('/api/hobbies', { method: 'POST', body: JSON.stringify({ name }) });
+    await loadHobbies();
   } catch (error) {
     console.error(error);
     showMessage(error.message);
     return;
   }
 
-  // Add it to the dropdown (unless it's already there) and select it.
-  const existing = [...hobbySelect.options].find((o) => o.value.toLowerCase() === name.toLowerCase());
-  if (!existing) hobbySelect.add(new Option(name, name));
-  hobbySelect.value = existing?.value ?? name;
+  const hobby = result.data;
+  hobbySelect.value = String(hobby.id);
   hobbySelect.dispatchEvent(new Event('change'));
-
-  showMessage(`Ooh, ${name}! Great choice. (Placeholder: not saved to the database yet.)`);
   hobbyInput.value = '';
+  showMessage(result.status === 201
+    ? `Ooh, ${hobby.name}! I've added it to the island.`
+    : `${hobby.name} is already on the list, so I picked it for you.`);
 });
 
-// TODO (timer step): real timer logic with setInterval, pause/resume, and POST the finished session.
+// ---------- Timer ----------
+
+function elapsedSeconds() {
+  const currentStretch = timer.status === 'running' ? Date.now() - timer.runningSince : 0;
+  return Math.floor((timer.bankedMs + currentStretch) / 1000);
+}
+
+// Draw the time with one fixed-width box per character (see the .digit CSS),
+// and show it in the tab title so it's visible from other tabs too.
+let shownTime = '';
+function renderTimer() {
+  const text = formatDuration(elapsedSeconds());
+  document.title = timer.status === 'idle' ? APP_TITLE : `${text} · ${timer.hobby.name}`;
+
+  if (text === shownTime) return; // only rebuild the digits when the second changes
+  shownTime = text;
+  timerDisplay.replaceChildren(...[...text].map((char) => {
+    const box = document.createElement('span');
+    box.className = char === ':' ? 'colon' : 'digit';
+    box.textContent = char;
+    return box;
+  }));
+}
+
+// Enable/disable everything to match the timer's status.
+function updateTimerControls() {
+  const { status } = timer;
+  btnStart.disabled = status === 'running';
+  startLabel.textContent = status === 'paused' ? 'Resume' : 'Start';
+  btnPause.disabled = status !== 'running';
+  btnStop.disabled = status === 'idle';
+
+  // Finish (Stop) the current session before changing hobby or player.
+  hobbySelect.disabled = status !== 'idle';
+  hobbyInput.disabled = status !== 'idle';
+  hobbyAddButton.disabled = status !== 'idle';
+  btnSwitch.disabled = status !== 'idle';
+
+  stage.classList.toggle('is-running', status === 'running');
+  timerDisplay.classList.toggle('is-running', status === 'running');
+  timerLabel.textContent = status === 'paused' ? 'Paused' : 'Time spent';
+}
+
+function startTimer() {
+  timer.status = 'running';
+  timer.runningSince = Date.now();
+  timer.tickId = setInterval(renderTimer, 250); // 4×/second, so the display never lags a whole second
+  updateTimerControls();
+  renderTimer();
+}
+
+function pauseTimer() {
+  timer.bankedMs += Date.now() - timer.runningSince;
+  timer.status = 'paused';
+  clearInterval(timer.tickId);
+  updateTimerControls();
+  renderTimer();
+}
+
+function resetTimer() {
+  clearInterval(timer.tickId);
+  Object.assign(timer, { status: 'idle', hobby: null, startedAt: null, bankedMs: 0, runningSince: 0, tickId: null });
+  updateTimerControls();
+  renderTimer();
+}
+
 btnStart.addEventListener('click', () => {
-  showMessage(`Placeholder: the timer will start here. You've got this, ${player.name}!`);
+  if (timer.status === 'paused') {
+    startTimer();
+    showMessage(`Welcome back! The ${timer.hobby.name} timer is running again.`);
+    return;
+  }
+
+  const hobby = selectedHobby();
+  if (!hobby) {
+    shake(hobbySelect);
+    hobbySelect.focus();
+    showMessage(`Pick a hobby first, ${player.name}!`);
+    return;
+  }
+  timer.hobby = hobby;
+  timer.startedAt = new Date();
+  timer.bankedMs = 0;
+  startTimer();
+  showMessage(`Let's go, ${player.name}! ${hobby.name} time has started.`);
 });
 
 btnPause.addEventListener('click', () => {
-  showMessage('Placeholder: the timer will pause here. Take a breather!');
+  pauseTimer();
+  showMessage("Taking a breather? Press Resume when you're ready.");
 });
 
-btnStop.addEventListener('click', () => {
-  finishTime.textContent = timerDisplay.textContent;
-  finishDialog.showModal(); // preview of the "cool finish display"
+// Stop = save the session (POST /api/time), then celebrate.
+btnStop.addEventListener('click', async () => {
+  if (timer.status === 'running') pauseTimer(); // freeze the clock while saving
+
+  const durationSeconds = elapsedSeconds();
+  if (durationSeconds < 1) {
+    resetTimer();
+    showMessage('That was quick! Sessions need at least a second to be saved.');
+    return;
+  }
+
+  btnStart.disabled = true;
+  btnStop.disabled = true;
+  showMessage('Saving your session…');
+
+  const hobby = timer.hobby;
+  try {
+    await api('/api/time', {
+      method: 'POST',
+      body: JSON.stringify({
+        entrant_id: player.id,
+        hobby_id: hobby.id,
+        started_at: timer.startedAt.toISOString(),
+        ended_at: new Date().toISOString(),
+        duration_seconds: durationSeconds,
+      }),
+    });
+  } catch (error) {
+    // Nothing is lost: the timer stays paused, so the player can press Stop again.
+    console.error(error);
+    updateTimerControls();
+    const reason = /[.!?…]$/.test(error.message) ? error.message : `${error.message}.`;
+    showMessage(`${reason} Your time is kept: press Stop to try again.`);
+    return;
+  }
+
+  resetTimer();
+  showMessage(`Saved! ${formatDuration(durationSeconds)} of ${hobby.name}. Ready for another round?`);
+
+  const totals = await loadTotals().catch((error) => {
+    console.error(error);
+    return [];
+  });
+  showFinish(hobby, durationSeconds, totals);
 });
 
-// ---------- Loaders (GET) ----------
+function showFinish(hobby, durationSeconds, totals) {
+  finishTime.textContent = formatDuration(durationSeconds);
+  finishHobby.textContent = hobby.name;
 
+  const mine = totals.find((row) => row.entrant_id === player.id && row.hobby_id === hobby.id);
+  finishTotal.textContent = mine
+    ? `Your ${hobby.name} total: ${formatDuration(mine.total_seconds)} over ${mine.sessions} session${mine.sessions === 1 ? '' : 's'}.`
+    : '';
+  finishDialog.showModal();
+}
+
+// Leaving the page mid-session would lose it, so ask the browser to confirm first.
+window.addEventListener('beforeunload', (event) => {
+  if (timer.status !== 'idle') event.preventDefault();
+});
+
+// ---------- Hobby Log (GET /api/time) ----------
+
+// Show everyone's totals, highlighting the current player's rows. Returns the rows.
 async function loadTotals() {
   const totals = await api('/api/time');
+
+  if (totals.length === 0) {
+    const td = document.createElement('td');
+    td.colSpan = 4;
+    td.className = 'muted';
+    td.textContent = 'No sessions yet. Press Start to log the first one!';
+    const tr = document.createElement('tr');
+    tr.append(td);
+    totalsBody.replaceChildren(tr);
+    return totals;
+  }
+
   totalsBody.replaceChildren(
     ...totals.map((row) => {
       const tr = document.createElement('tr');
-      for (const value of [row.entrant, row.hobby, formatDuration(row.total_seconds)]) {
+      tr.classList.toggle('is-me', row.entrant_id === player.id);
+      for (const value of [row.entrant, row.hobby, row.sessions, formatDuration(row.total_seconds)]) {
         const td = document.createElement('td');
-        td.textContent = value;
+        td.textContent = value; // textContent (not innerHTML) keeps names from being run as HTML
         tr.append(td);
       }
       return tr;
     }),
   );
+  return totals;
 }
 
 // ---------- Start-up ----------
-loadTotals().catch(console.error);
+renderTimer();
 
 const welcome = await prepareWelcome();
 if (welcome.focusOn === nameInput) nameInput.focus(); // first visit: ready to type straight away

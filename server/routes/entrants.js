@@ -3,43 +3,25 @@
 //   POST /api/entrants  → add a player, or return the existing one   body: { "name": "Alex" }
 
 import { Router } from 'express';
-import db from '../db/database.js';
+import store from '../db/index.js';
+import { cleanName } from '../validation.js';
 
 const router = Router();
 
-const MAX_NAME_LENGTH = 20;
-
-// Prepared once, reused on every request (faster, and the `?` placeholders
-// mean user input is never pasted into the SQL text: no SQL injection).
-const listEntrants = db.prepare('SELECT id, name, created_at FROM entrants ORDER BY name');
-const findByName   = db.prepare('SELECT id, name, created_at FROM entrants WHERE name = ?');
-const findById     = db.prepare('SELECT id, name, created_at FROM entrants WHERE id = ?');
-const insert       = db.prepare('INSERT INTO entrants (name) VALUES (?)');
-
-router.get('/', (req, res) => {
-  res.json(listEntrants.all());
+router.get('/', async (req, res) => {
+  res.json(await store.listEntrants());
 });
 
-router.post('/', (req, res) => {
-  // Tidy the name: trim the ends and squash repeated spaces ("  Alex   Lee " → "Alex Lee")
-  const raw = req.body?.name;
-  const name = typeof raw === 'string' ? raw.trim().replace(/\s+/g, ' ') : '';
+router.post('/', async (req, res) => {
+  const name = cleanName(req.body?.name, {
+    maxLength: 20,
+    emptyMessage: 'Please enter a name.',
+    tooLongMessage: 'Names can be at most 20 characters.',
+  });
 
-  if (!name) {
-    return res.status(400).json({ error: 'Please enter a name.' });
-  }
-  if ([...name].length > MAX_NAME_LENGTH) {
-    return res.status(400).json({ error: `Names can be at most ${MAX_NAME_LENGTH} characters.` });
-  }
-
-  // The name column is UNIQUE COLLATE NOCASE, so "alex" finds "Alex".
-  const existing = findByName.get(name);
-  if (existing) {
-    return res.status(200).json(existing); // 200 = already known
-  }
-
-  const { lastInsertRowid } = insert.run(name);
-  res.status(201).json(findById.get(lastInsertRowid)); // 201 = newly created
+  // Names are unique ignoring case, so "alex" finds the existing "Alex".
+  const { row, created } = await store.findOrCreateEntrant(name);
+  res.status(created ? 201 : 200).json(row); // 201 = newly created, 200 = already known
 });
 
 export default router;

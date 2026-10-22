@@ -687,6 +687,10 @@ select {
   translate: -50% 0;
   font-size: 64px;
   line-height: 1;
+}
+
+/* The hobby only hops while the timer is running */
+.stage.is-running .hobby-emoji {
   animation: hop 1.4s var(--bounce) infinite;
 }
 
@@ -728,13 +732,27 @@ select {
   font-family: var(--font-display);
   font-weight: 700;
   font-size: clamp(2.8rem, 11vw, 4.4rem);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.04em;
   line-height: 1.25;
   background: #fff;
   border-radius: 28px;
   box-shadow: 0 0 0 4px var(--cream-line), inset 0 -6px 0 var(--cream-line);
 }
+
+.timer-display.is-running {
+  color: var(--teal);
+}
+
+/* Fredoka's digits have different widths ("1" is much narrower than "0") and the
+   font ignores tabular-nums, so app.js puts each character in a fixed-width box.
+   Without this the ticking clock would jiggle sideways every second. */
+.timer-display .digit,
+.timer-display .colon {
+  display: inline-block;
+  text-align: center;
+}
+
+.timer-display .digit { width: 0.6em; }
+.timer-display .colon { width: 0.3em; }
 
 .controls {
   display: flex;
@@ -838,6 +856,11 @@ select {
 
 .log-table td[colspan] {
   border-radius: 999px;
+}
+
+/* The current player's rows */
+.log-table tr.is-me td {
+  background: #e7f6dd;
 }
 
 .app-footer {
@@ -1029,6 +1052,12 @@ select {
   font-size: 3rem;
   font-variant-numeric: tabular-nums;
   color: var(--teal);
+}
+
+.finish-dialog .finish-total {
+  margin-top: 12px;
+  font-weight: 600;
+  color: var(--brown-soft);
 }
 
 .finish-dialog form {

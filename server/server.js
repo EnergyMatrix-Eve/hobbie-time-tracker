@@ -2,9 +2,10 @@
 //   1. Serves the front end (everything in /public) at http://localhost:3000
 //   2. Exposes the JSON API under /api/...
 
+import './env.js'; // must be first: loads .env before the database is chosen
 import path from 'node:path';
 import express from 'express';
-import db, { DB_PATH } from './db/database.js';
+import store from './db/index.js';
 import entrantsRouter from './routes/entrants.js';
 import hobbiesRouter from './routes/hobbies.js';
 import timeRouter from './routes/time.js';
@@ -20,18 +21,19 @@ app.use(express.static(PUBLIC_DIR));  // serve index.html, css/, js/
 
 // --- API routes ----------------------------------------------------------
 
-// Health check: proves the server is up AND the database is reachable.
-app.get('/api/health', (req, res) => {
-  const tables = db
-    .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name")
-    .all()
-    .map((row) => row.name);
-
-  res.json({ status: 'ok', database: path.basename(DB_PATH), tables });
+// Health check: proves the server is up AND the database is reachable,
+// and says which database is in use. Open it in the browser to troubleshoot.
+app.get('/api/health', async (req, res) => {
+  try {
+    const { tables } = await store.health();
+    res.json({ status: 'ok', database: store.name, tables });
+  } catch (error) {
+    res.status(503).json({ status: 'error', database: store.name, error: error.message });
+  }
 });
 
 app.use('/api/entrants', entrantsRouter);
-app.use('/api/hobbie', hobbiesRouter);
+app.use(['/api/hobbies', '/api/hobbie'], hobbiesRouter); // /api/hobbie = the original spec's name
 app.use('/api/time', timeRouter);
 
 // Any other /api/... URL → JSON 404 (instead of Express's default HTML page).
@@ -57,5 +59,5 @@ app.listen(PORT, (error) => {
     throw error;
   }
   console.log(`Hobbies Time Tracker running at http://localhost:${PORT}`);
-  console.log(`SQLite database: ${DB_PATH}`);
+  console.log(`Database: ${store.name} (${store.location})`);
 });
