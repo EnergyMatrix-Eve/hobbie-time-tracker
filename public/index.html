@@ -4,104 +4,193 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hobbies Time Tracker</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏱️</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍃</text></svg>">
+
+  <!-- Rounded, friendly fonts (falls back to system fonts when offline) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap">
+
   <link rel="stylesheet" href="css/styles.css">
   <!-- type="module" scripts run after the HTML is parsed, so the DOM is ready -->
   <script type="module" src="js/app.js"></script>
 </head>
 <body>
 
-  <!-- ============ HEADER ============ -->
-  <header class="app-header">
-    <h1>⏱️ Hobbies Time Tracker</h1>
-    <p class="tagline">Track the time people spend on their hobbies</p>
-    <span id="api-status" class="status-badge">Checking server…</span>
-  </header>
+  <!-- Reusable SVG icons: drawn once here, used below with <use href="#icon-…"> -->
+  <svg class="icon-sprite" aria-hidden="true">
+    <symbol id="icon-leaf" viewBox="0 0 64 64">
+      <path d="M14 52C9 30 26 9 57 7c-1 31-19 49-43 45Z" fill="currentColor"/>
+      <path d="M14 52 7 59" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+      <path d="M15 50C25 36 37 24 50 15" stroke="#fff" stroke-width="3.5" stroke-linecap="round" fill="none" opacity="0.75"/>
+    </symbol>
+    <symbol id="icon-play" viewBox="0 0 24 24">
+      <path d="M7 4.6v14.8a1.2 1.2 0 0 0 1.8 1l12-7.4a1.2 1.2 0 0 0 0-2l-12-7.4A1.2 1.2 0 0 0 7 4.6Z" fill="currentColor"/>
+    </symbol>
+    <symbol id="icon-pause" viewBox="0 0 24 24">
+      <rect x="5" y="4" width="5" height="16" rx="1.6" fill="currentColor"/>
+      <rect x="14" y="4" width="5" height="16" rx="1.6" fill="currentColor"/>
+    </symbol>
+    <symbol id="icon-stop" viewBox="0 0 24 24">
+      <rect x="5" y="5" width="14" height="14" rx="3" fill="currentColor"/>
+    </symbol>
+  </svg>
 
-  <main class="layout">
+  <!-- Sky, sun, drifting clouds and hills behind both screens -->
+  <div class="scenery" aria-hidden="true">
+    <div class="sun"></div>
+    <div class="cloud cloud-1"></div>
+    <div class="cloud cloud-2"></div>
+    <div class="cloud cloud-3"></div>
+    <div class="hills"></div>
+  </div>
 
-    <!-- ============ ENTRANTS ============ -->
-    <section class="card" aria-labelledby="entrants-heading">
-      <h2 id="entrants-heading">👥 Entrants</h2>
-      <p class="hint">Placeholder: pick who is tracking time.</p>
+  <!-- ================= SCREEN 1: WELCOME (enter your name) ================= -->
+  <main id="screen-welcome" class="screen screen-welcome">
+    <div class="logo">
+      <svg class="logo-leaf" aria-hidden="true"><use href="#icon-leaf"/></svg>
+      <h1 class="logo-title">
+        Hobbies
+        <span class="logo-ribbon">Time Tracker</span>
+      </h1>
+    </div>
 
-      <ul id="entrant-list" class="entrant-list">
-        <li class="muted">Loading entrants…</li>
-      </ul>
+    <section class="dialogue" aria-labelledby="guide-name">
+      <span class="dialogue-tag" id="guide-name">Tracky</span>
+      <span class="guide-avatar" aria-hidden="true">🐿️</span>
 
-      <form id="entrant-form" class="inline-form">
-        <input id="entrant-name" type="text" placeholder="New entrant name" autocomplete="off">
-        <button type="submit" class="btn btn-secondary">Add</button>
+      <p class="dialogue-text">
+        <!-- Screen readers get the whole line at once; the typed copy is visual only -->
+        <span id="welcome-line-sr" class="sr-only" aria-live="polite"></span>
+        <span id="welcome-line" aria-hidden="true"></span>
+      </p>
+
+      <form id="name-form" class="name-form" novalidate>
+        <label for="player-name" class="sr-only">Your name</label>
+        <input id="player-name" type="text" maxlength="20" placeholder="Type your name…" autocomplete="off" autofocus>
+        <button type="submit" class="btn btn-teal">That's me!</button>
       </form>
+
+      <span class="dialogue-next" aria-hidden="true"></span>
     </section>
-
-    <!-- ============ TRACKER ============ -->
-    <section class="card tracker" aria-labelledby="tracker-heading">
-      <h2 id="tracker-heading">🎯 Track a Hobby</h2>
-
-      <div class="hobby-picker">
-        <label for="hobby-select">Choose a hobby</label>
-        <select id="hobby-select">
-          <option value="">— Select a hobby —</option>
-          <option>Guitar</option>
-          <option>Painting</option>
-          <option>Running</option>
-          <option>Reading</option>
-        </select>
-
-        <form id="hobby-form" class="inline-form">
-          <input id="hobby-name" type="text" placeholder="…or enter a new hobby" autocomplete="off">
-          <button type="submit" class="btn btn-secondary">Add</button>
-        </form>
-      </div>
-
-      <!-- Hobby animation area -->
-      <div id="hobby-stage" class="hobby-stage" aria-live="polite">
-        <span class="hobby-emoji">🎸</span>
-        <p class="muted">Placeholder: hobby animation will play here</p>
-      </div>
-
-      <!-- Timer display -->
-      <div id="timer-display" class="timer-display" role="timer">00:00:00</div>
-
-      <div class="controls">
-        <button id="btn-start" class="btn btn-start">▶ Start</button>
-        <button id="btn-pause" class="btn btn-pause">⏸ Pause</button>
-        <button id="btn-stop"  class="btn btn-stop">⏹ Stop</button>
-      </div>
-
-      <p id="encouragement" class="encouragement">Placeholder: encouraging messages will appear here ✨</p>
-    </section>
-
-    <!-- ============ ACCUMULATED TIME ============ -->
-    <section class="card wide" aria-labelledby="totals-heading">
-      <h2 id="totals-heading">📊 Accumulated Time</h2>
-      <table class="totals-table">
-        <thead>
-          <tr><th>Entrant</th><th>Hobby</th><th>Total time</th></tr>
-        </thead>
-        <tbody id="totals-body">
-          <tr><td colspan="3" class="muted">Loading…</td></tr>
-        </tbody>
-      </table>
-    </section>
-
   </main>
 
-  <!-- ============ FINISH CELEBRATION (shown when Stop is pressed) ============ -->
-  <dialog id="finish-dialog" class="finish-dialog">
-    <div class="confetti" aria-hidden="true">🎉 🎊 🏆 🎊 🎉</div>
-    <h2>Session complete!</h2>
-    <p>Placeholder: the "cool display" summary of the session goes here.</p>
+  <!-- ================= SCREEN 2: TRACKER ================= -->
+  <div id="screen-tracker" class="screen screen-tracker" hidden>
+    <header class="topbar">
+      <div class="brand">
+        <svg class="brand-leaf" aria-hidden="true"><use href="#icon-leaf"/></svg>
+        Hobbies Time Tracker
+      </div>
+      <div class="topbar-right">
+        <span id="api-status" class="status-pill">Checking island server…</span>
+        <button id="btn-switch" class="btn btn-small" type="button">Switch player</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <h2 id="greeting" class="greeting" tabindex="-1">
+        Hi, <span id="player-greeting">friend</span>! What are we enjoying today?
+      </h2>
+
+      <!-- Tracker card -->
+      <section class="card" aria-labelledby="tracker-heading">
+        <h2 id="tracker-heading" class="card-tag">Track a Hobby</h2>
+
+        <div class="hobby-picker">
+          <div class="field">
+            <label for="hobby-select">Choose a hobby</label>
+            <select id="hobby-select">
+              <option value="">— Select a hobby —</option>
+              <option>Guitar</option>
+              <option>Painting</option>
+              <option>Running</option>
+              <option>Reading</option>
+            </select>
+          </div>
+          <form id="hobby-form" class="field inline-form">
+            <label for="hobby-name">…or add a new one</label>
+            <div class="inline-row">
+              <input id="hobby-name" type="text" placeholder="e.g. Fishing" autocomplete="off">
+              <button type="submit" class="btn btn-teal">Add</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Hobby animation: a tiny island scene -->
+        <div class="stage" aria-live="polite">
+          <div class="stage-cloud" aria-hidden="true"></div>
+          <div class="island" aria-hidden="true">
+            <span class="hobby-emoji">🌱</span>
+          </div>
+          <p id="stage-caption" class="stage-caption">Pick a hobby to begin</p>
+        </div>
+
+        <!-- Timer display -->
+        <div class="timer">
+          <span class="timer-label">Time spent</span>
+          <div id="timer-display" class="timer-display" role="timer">00:00:00</div>
+        </div>
+
+        <div class="controls">
+          <button id="btn-start" class="btn btn-start" type="button">
+            <svg class="btn-icon" aria-hidden="true"><use href="#icon-play"/></svg>Start
+          </button>
+          <button id="btn-pause" class="btn btn-pause" type="button">
+            <svg class="btn-icon" aria-hidden="true"><use href="#icon-pause"/></svg>Pause
+          </button>
+          <button id="btn-stop" class="btn btn-stop" type="button">
+            <svg class="btn-icon" aria-hidden="true"><use href="#icon-stop"/></svg>Stop
+          </button>
+        </div>
+
+        <!-- Tracky's encouragement bubble -->
+        <div class="speech">
+          <span class="speech-avatar" aria-hidden="true">🐿️</span>
+          <p id="encouragement" class="speech-text" aria-live="polite">Pick a hobby and press Start. I'll cheer you on!</p>
+        </div>
+      </section>
+
+      <!-- Accumulated time card -->
+      <section class="card" aria-labelledby="totals-heading">
+        <h2 id="totals-heading" class="card-tag card-tag-green">Hobby Log</h2>
+        <div class="table-scroll">
+          <table class="log-table">
+            <thead>
+              <tr><th scope="col">Player</th><th scope="col">Hobby</th><th scope="col">Total time</th></tr>
+            </thead>
+            <tbody id="totals-body">
+              <tr><td colspan="3" class="muted">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <p>v0.2 · placeholder data until the database is connected</p>
+    </footer>
+  </div>
+
+  <!-- Full-screen circle wipe used when switching screens -->
+  <div id="transition" class="transition" aria-hidden="true">
+    <svg class="transition-leaf"><use href="#icon-leaf"/></svg>
+  </div>
+
+  <!-- ================= FINISH CELEBRATION (shown when Stop is pressed) ================= -->
+  <dialog id="finish-dialog" class="finish-dialog" aria-labelledby="finish-title">
+    <div class="confetti" aria-hidden="true">
+      <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+    </div>
+    <span class="dialogue-tag">Tracky</span>
+    <h2 id="finish-title">Session complete!</h2>
+    <p>Great job, <span id="finish-name">friend</span>! You spent</p>
     <p class="finish-time" id="finish-time">00:00:00</p>
+    <p class="muted">Placeholder: a full session summary will go here.</p>
     <form method="dialog">
-      <button class="btn btn-start">Nice!</button>
+      <button class="btn btn-start">Yay!</button>
     </form>
   </dialog>
-
-  <footer class="app-footer">
-    <p class="muted">Boilerplate v0.1 — placeholders only</p>
-  </footer>
 
 </body>
 </html>

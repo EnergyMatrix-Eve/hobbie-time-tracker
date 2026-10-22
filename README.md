@@ -1,8 +1,10 @@
 # ⏱️ Hobbies Time Tracker
 
-Track the time people spend on their hobbies. Pick (or add) an entrant and a hobby, press **Start**, and watch the timer run. **Pause** or **Stop** at any time, and finish with a celebration screen.
+Track the time people spend on their hobbies. Tell the island guide your name, pick (or add) a hobby, press **Start**, and watch the timer run. **Pause** or **Stop** at any time, and finish with a celebration screen.
 
-> **Status: boilerplate (v0.1).** The structure, database schema and API routes are in place. Routes return **placeholder** data, and the timer buttons are stubs. Look for `TODO` comments to see what comes next.
+The look is a cozy island theme inspired by Animal Crossing: sky and clouds, cream panels, rounded type and bouncy motion. All artwork is original CSS/SVG, with no Nintendo assets.
+
+> **Status: v0.2.** The welcome (name entry) screen, the screen transition and the themed tracker UI are done. The API routes still return **placeholder** data, and the timer buttons are stubs. Look for `TODO` comments to see what comes next.
 
 ---
 
@@ -11,6 +13,7 @@ Track the time people spend on their hobbies. Pick (or add) an entrant and a hob
 | Layer     | Technology                                      | Why                                                |
 |-----------|-------------------------------------------------|----------------------------------------------------|
 | Front end | Plain HTML, CSS, JavaScript (no framework)      | Nothing to compile. Edit and refresh the browser.  |
+| Fonts     | [Fredoka](https://fonts.google.com/specimen/Fredoka) and [Nunito](https://fonts.google.com/specimen/Nunito) from Google Fonts | Rounded, friendly type. Needs internet; offline it falls back to system fonts. |
 | Back end  | [Node.js](https://nodejs.org) 22+ with [Express 5](https://expressjs.com) | Small, popular web server for JSON APIs. |
 | Database  | [SQLite](https://sqlite.org) via [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) | A single file on disk. No database server to install. |
 
@@ -83,8 +86,13 @@ SQLite database: .../hobbie-time-tracker/data/hobbies.db
 
 ### 5. Open the app
 
-Go to **<http://localhost:3000>** in your browser. The green badge under the title should read
-`Server OK · DB tables: entrants, hobbies, time_entries`.
+Go to **<http://localhost:3000>** in your browser.
+
+1. The welcome screen opens and **Tracky** (the island guide) asks for your name.
+2. Type it and press **Enter** (or click **That's me!**). A leafy circle wipe takes you to the tracker.
+3. The top bar should show a green dot with **Island server online**. Hover over it to see the database tables.
+
+Click **Switch player** in the top bar to go back and enter a different name.
 
 ### 6. Stop the server
 
@@ -176,13 +184,17 @@ Timestamps are stored in **UTC**. Convert to local time when displaying.
 | `git clone` says `destination path 'hobbie-time-tracker' already exists` | A folder with that name is already there (e.g. an unzipped copy). Run `git -C hobbie-time-tracker status`. If it says *not a git repository*, delete or rename that folder and clone again. If it is a clone, `cd` into it and run `git pull` instead. |
 | `npm install` fails with `node-gyp rebuild` / `gyp ERR! find VS` (better-sqlite3) | better-sqlite3 already ships ready-made binaries, but npm 10/11 wrongly tries to compile it when installing from `package-lock.json`. The project's `.npmrc` (`ignore-scripts=true`) prevents this. Make sure `.npmrc` exists (it starts with a dot, so it may be hidden in Explorer), delete `node_modules`, and run `npm install` again. You do **not** need Visual Studio. |
 | `npm` / `node` not recognised (Windows) | Close and reopen the terminal after installing Node so it picks up the new PATH. |
-| Page loads but badge says **Server not reachable** | Make sure you opened `http://localhost:3000` (served by Node), not the `index.html` file directly from disk. |
+| Top bar says **Island server offline** | Make sure you opened `http://localhost:3000` (served by Node), not the `index.html` file directly from disk. |
+| Text looks plain instead of rounded | The Google Fonts couldn't load (no internet or blocked by a firewall). The app still works with system fonts. |
 | Changes to the page don't show | Hard refresh: **Ctrl + Shift + R** (Windows) / **Cmd + Shift + R** (macOS). |
 
 ---
 
 ## Roadmap
 
+- [x] Welcome screen: enter your name, then a smooth transition into the tracker
+- [x] Cozy island theme (Animal Crossing-inspired)
+- [ ] Save the player's name via `POST /api/entrants` (see `TODO` in `public/js/app.js`)
 - [ ] Replace placeholder routes with real SQLite queries (see `TODO`s in `server/routes/`)
 - [ ] Working timer: start / pause / resume / stop
 - [ ] Save finished sessions to `time_entries`
