@@ -539,39 +539,9 @@ select {
     0 3px 0 var(--brown);
 }
 
-/* Server status on top, "Switch player" underneath, both against the right edge */
+/* "Switch player", pushed against the right edge */
 .topbar-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 10px;
   margin-left: auto;
-}
-
-.status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: 0.9rem;
-  color: var(--brown);
-  background: rgb(255 249 227 / 0.9);
-  border-radius: 999px;
-}
-
-.status-pill.ok::before,
-.status-pill.error::before {
-  content: "";
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--green);
-}
-
-.status-pill.error::before {
-  background: var(--coral);
 }
 
 .layout {

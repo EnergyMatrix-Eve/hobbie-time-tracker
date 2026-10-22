@@ -45,7 +45,6 @@ const btnGo           = $('#btn-go');
 // Tracker screen
 const trackerScreen   = $('#screen-tracker');
 const weatherNow      = $('#weather-now');
-const apiStatus       = $('#api-status');
 const btnSwitch       = $('#btn-switch');
 const greeting        = $('#greeting');
 const playerGreeting  = $('#player-greeting');
@@ -465,19 +464,6 @@ btnStop.addEventListener('click', () => {
 
 // ---------- Loaders (GET) ----------
 
-async function checkHealth() {
-  try {
-    const health = await api('/api/health');
-    apiStatus.textContent = 'Island server online';
-    apiStatus.title = `Database tables: ${health.tables.join(', ')}`;
-    apiStatus.className = 'status-pill ok';
-  } catch (error) {
-    apiStatus.textContent = 'Island server offline';
-    apiStatus.className = 'status-pill error';
-    console.error(error);
-  }
-}
-
 async function loadTotals() {
   const totals = await api('/api/time');
   totalsBody.replaceChildren(
@@ -494,7 +480,6 @@ async function loadTotals() {
 }
 
 // ---------- Start-up ----------
-checkHealth();
 loadTotals().catch(console.error);
 
 const welcome = await prepareWelcome();

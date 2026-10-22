@@ -96,7 +96,7 @@ Go to **<http://localhost:3000>** in your browser.
    - **After that:** click your name in the list. New people click **+ I'm new here**.
 2. A leafy circle wipe opens the **loading page**, which shows today's weather. The first time, your browser asks to use your location: **Allow** gives your local weather, **Block** uses the fallback city (see [Weather](#weather)).
 3. After a few seconds (or click **Let's go!**) the tracker opens, with the sky matching the weather.
-4. Today's weather appears under the **Hobbies Time Tracker** title (hover over it for the high and low). On the right, a green dot shows **Island server online**.
+4. Today's weather appears under the **Hobbies Time Tracker** title (hover over it for the high and low).
 
 Click **Switch player** (under the server status) to go back and pick someone else.
 
@@ -206,7 +206,7 @@ Timestamps are stored in **UTC**. Convert to local time when displaying.
 | `git clone` says `destination path 'hobbie-time-tracker' already exists` | A folder with that name is already there (e.g. an unzipped copy). Run `git -C hobbie-time-tracker status`. If it says *not a git repository*, delete or rename that folder and clone again. If it is a clone, `cd` into it and run `git pull` instead. |
 | `npm install` fails with `node-gyp rebuild` / `gyp ERR! find VS` (better-sqlite3) | better-sqlite3 already ships ready-made binaries, but npm 10/11 wrongly tries to compile it when installing from `package-lock.json`. The project's `.npmrc` (`ignore-scripts=true`) prevents this. Make sure `.npmrc` exists (it starts with a dot, so it may be hidden in Explorer), delete `node_modules`, and run `npm install` again. You do **not** need Visual Studio. |
 | `npm` / `node` not recognised (Windows) | Close and reopen the terminal after installing Node so it picks up the new PATH. |
-| Top bar says **Island server offline** | Make sure you opened `http://localhost:3000` (served by Node), not the `index.html` file directly from disk. |
+| Tracky says **"I can't reach the island server"** | The server isn't running, or you opened the `index.html` file directly from disk. Start it with `npm run dev` and open `http://localhost:3000`. To check the server and database on their own, open <http://localhost:3000/api/health>. |
 | Text looks plain instead of rounded | The Google Fonts couldn't load (no internet or blocked by a firewall). The app still works with system fonts. |
 | Loading page says **Weather unavailable** | The browser couldn't reach `api.open-meteo.com` (no internet, or a work firewall blocks it). The app still works; the sky follows your clock instead. Press F12 → **Console** to see the exact error. |
 | Weather shows the fallback city instead of where you are | Location was blocked. In Chrome/Edge, click the icon left of the address bar → **Location** → **Allow**, then reload. On Windows, also check **Settings → Privacy & security → Location**. |
