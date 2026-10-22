@@ -355,7 +355,6 @@ select {
   place-items: center;
   width: 84px;
   height: 84px;
-  font-size: 46px;
   background: var(--avatar-bg);
   border: 5px solid var(--cream);
   border-radius: 50%;
@@ -518,11 +517,35 @@ select {
   filter: drop-shadow(0 3px 0 var(--brown));
 }
 
+.topbar-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+/* Today's weather under the title. No background, so it borrows the title's
+   white-with-brown-outline lettering to stay readable on any sky. */
+.weather-now {
+  margin: 0;
+  padding-left: 46px; /* lines up with the title text: leaf width (36px) + gap (10px) */
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+  color: #fff;
+  text-shadow:
+    1.5px 0 0 var(--brown), -1.5px 0 0 var(--brown), 0 1.5px 0 var(--brown), 0 -1.5px 0 var(--brown),
+    0 3px 0 var(--brown);
+}
+
+/* Server status on top, "Switch player" underneath, both against the right edge */
 .topbar-right {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  margin-left: auto;
 }
 
 .status-pill {
@@ -759,6 +782,12 @@ select {
 }
 
 /* Tracky's speech bubble */
+/* Tracky the quokka inside the round avatar frames */
+.quokka {
+  width: 82%;
+  height: 82%;
+}
+
 .speech {
   display: flex;
   align-items: center;
@@ -772,7 +801,6 @@ select {
   place-items: center;
   width: 58px;
   height: 58px;
-  font-size: 32px;
   background: var(--avatar-bg);
   border-radius: 50%;
   box-shadow: 0 4px 0 var(--cream-shadow);
@@ -1304,7 +1332,7 @@ body[data-weather="storm"] .flash {
   .hobby-picker { grid-template-columns: minmax(0, 1fr); }
   .dialogue     { padding: 46px 22px 40px; border-radius: 36px; }
   .dialogue-tag { left: 24px; }
-  .guide-avatar { right: 20px; width: 72px; height: 72px; font-size: 38px; top: -42px; }
+  .guide-avatar { right: 20px; width: 72px; height: 72px; top: -42px; }
   .card         { padding: 46px 18px 26px; }
   .controls .btn { min-width: 0; flex: 1 1 100px; padding: 10px 14px; }
   .speech-avatar { display: none; }

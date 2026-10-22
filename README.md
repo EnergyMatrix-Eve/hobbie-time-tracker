@@ -1,6 +1,6 @@
 # ⏱️ Hobbies Time Tracker
 
-Track the time people spend on their hobbies. Tell the island guide your name the first time (after that, just pick it from the list). A loading page shows **today's weather**, and the island's sky matches it: sun, clouds, rain, snow, fog, storms, day or night. Then pick (or add) a hobby, press **Start**, and watch the timer run. **Pause** or **Stop** at any time, and finish with a celebration screen.
+Track the time people spend on their hobbies. Tell Tracky the quokka (the island guide) your name the first time (after that, just pick it from the list). A loading page shows **today's weather**, and the island's sky matches it: sun, clouds, rain, snow, fog, storms, day or night. Then pick (or add) a hobby, press **Start**, and watch the timer run. **Pause** or **Stop** at any time, and finish with a celebration screen.
 
 The look is a cozy island theme inspired by Animal Crossing: sky and clouds, cream panels, rounded type and bouncy motion. All artwork is original CSS/SVG, with no Nintendo assets.
 
@@ -91,14 +91,14 @@ SQLite database: .../hobbie-time-tracker/data/hobbies.db
 
 Go to **<http://localhost:3000>** in your browser.
 
-1. The welcome screen opens and **Tracky** (the island guide) greets you.
+1. The welcome screen opens and **Tracky** the quokka (the island guide) greets you.
    - **First time:** type your name and press **Enter** (or click **That's me!**). Tracky remembers it.
    - **After that:** click your name in the list. New people click **+ I'm new here**.
 2. A leafy circle wipe opens the **loading page**, which shows today's weather. The first time, your browser asks to use your location: **Allow** gives your local weather, **Block** uses the fallback city (see [Weather](#weather)).
 3. After a few seconds (or click **Let's go!**) the tracker opens, with the sky matching the weather.
-4. The top bar shows the weather and a green dot with **Island server online**. Hover over them for details.
+4. Today's weather appears under the **Hobbies Time Tracker** title (hover over it for the high and low). On the right, a green dot shows **Island server online**.
 
-Click **Switch player** in the top bar to go back and pick someone else.
+Click **Switch player** (under the server status) to go back and pick someone else.
 
 ### 6. Stop the server
 

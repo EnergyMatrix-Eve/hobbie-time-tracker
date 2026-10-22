@@ -44,7 +44,7 @@ const btnGo           = $('#btn-go');
 
 // Tracker screen
 const trackerScreen   = $('#screen-tracker');
-const weatherPill     = $('#weather-pill');
+const weatherNow      = $('#weather-now');
 const apiStatus       = $('#api-status');
 const btnSwitch       = $('#btn-switch');
 const greeting        = $('#greeting');
@@ -388,10 +388,10 @@ function applyWeather(weather) {
   document.body.dataset.weather = weather?.condition ?? 'unknown';
   document.body.dataset.daytime = isDay ? 'day' : 'night';
 
-  weatherPill.hidden = !weather;
+  weatherNow.hidden = !weather;
   if (weather) {
-    weatherPill.textContent = `${weatherIcon(weather)} ${weather.temperature}${weather.unit} · ${weather.label}`;
-    weatherPill.title = `${weather.place} · High ${weather.high}° · Low ${weather.low}°`;
+    weatherNow.textContent = `${weatherIcon(weather)} ${weather.temperature}${weather.unit} · ${weather.label}`;
+    weatherNow.title = `${weather.place} · High ${weather.high}° · Low ${weather.low}°`;
   }
   showMessage(weatherLine(weather, player.name));
 }
