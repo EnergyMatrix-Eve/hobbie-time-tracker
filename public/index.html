@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hobbies Time Tracker</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏱️</text></svg>">
+  <link rel="stylesheet" href="css/styles.css">
+  <!-- type="module" scripts run after the HTML is parsed, so the DOM is ready -->
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+
+  <!-- ============ HEADER ============ -->
+  <header class="app-header">
+    <h1>⏱️ Hobbies Time Tracker</h1>
+    <p class="tagline">Track the time people spend on their hobbies</p>
+    <span id="api-status" class="status-badge">Checking server…</span>
+  </header>
+
+  <main class="layout">
+
+    <!-- ============ ENTRANTS ============ -->
+    <section class="card" aria-labelledby="entrants-heading">
+      <h2 id="entrants-heading">👥 Entrants</h2>
+      <p class="hint">Placeholder: pick who is tracking time.</p>
+
+      <ul id="entrant-list" class="entrant-list">
+        <li class="muted">Loading entrants…</li>
+      </ul>
+
+      <form id="entrant-form" class="inline-form">
+        <input id="entrant-name" type="text" placeholder="New entrant name" autocomplete="off">
+        <button type="submit" class="btn btn-secondary">Add</button>
+      </form>
+    </section>
+
+    <!-- ============ TRACKER ============ -->
+    <section class="card tracker" aria-labelledby="tracker-heading">
+      <h2 id="tracker-heading">🎯 Track a Hobby</h2>
+
+      <div class="hobby-picker">
+        <label for="hobby-select">Choose a hobby</label>
+        <select id="hobby-select">
+          <option value="">— Select a hobby —</option>
+          <option>Guitar</option>
+          <option>Painting</option>
+          <option>Running</option>
+          <option>Reading</option>
+        </select>
+
+        <form id="hobby-form" class="inline-form">
+          <input id="hobby-name" type="text" placeholder="…or enter a new hobby" autocomplete="off">
+          <button type="submit" class="btn btn-secondary">Add</button>
+        </form>
+      </div>
+
+      <!-- Hobby animation area -->
+      <div id="hobby-stage" class="hobby-stage" aria-live="polite">
+        <span class="hobby-emoji">🎸</span>
+        <p class="muted">Placeholder: hobby animation will play here</p>
+      </div>
+
+      <!-- Timer display -->
+      <div id="timer-display" class="timer-display" role="timer">00:00:00</div>
+
+      <div class="controls">
+        <button id="btn-start" class="btn btn-start">▶ Start</button>
+        <button id="btn-pause" class="btn btn-pause">⏸ Pause</button>
+        <button id="btn-stop"  class="btn btn-stop">⏹ Stop</button>
+      </div>
+
+      <p id="encouragement" class="encouragement">Placeholder: encouraging messages will appear here ✨</p>
+    </section>
+
+    <!-- ============ ACCUMULATED TIME ============ -->
+    <section class="card wide" aria-labelledby="totals-heading">
+      <h2 id="totals-heading">📊 Accumulated Time</h2>
+      <table class="totals-table">
+        <thead>
+          <tr><th>Entrant</th><th>Hobby</th><th>Total time</th></tr>
+        </thead>
+        <tbody id="totals-body">
+          <tr><td colspan="3" class="muted">Loading…</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+  </main>
+
+  <!-- ============ FINISH CELEBRATION (shown when Stop is pressed) ============ -->
+  <dialog id="finish-dialog" class="finish-dialog">
+    <div class="confetti" aria-hidden="true">🎉 🎊 🏆 🎊 🎉</div>
+    <h2>Session complete!</h2>
+    <p>Placeholder: the "cool display" summary of the session goes here.</p>
+    <p class="finish-time" id="finish-time">00:00:00</p>
+    <form method="dialog">
+      <button class="btn btn-start">Nice!</button>
+    </form>
+  </dialog>
+
+  <footer class="app-footer">
+    <p class="muted">Boilerplate v0.1 — placeholders only</p>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,283 @@
+/* =============================================================
+   Hobbies Time Tracker — styles
+   Colours are defined once as variables, then reused everywhere.
+   ============================================================= */
+
+:root {
+  --bg:        #f4f6fb;
+  --surface:   #ffffff;
+  --text:      #1f2433;
+  --muted:     #6b7280;
+  --border:    #e3e7ef;
+  --brand:     #5b5bd6;
+  --start:     #16a34a;
+  --pause:     #d97706;
+  --stop:      #dc2626;
+  --radius:    14px;
+  --shadow:    0 4px 18px rgba(31, 36, 51, 0.08);
+  --font:      system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:      #12141c;
+    --surface: #1c1f2b;
+    --text:    #e8eaf2;
+    --muted:   #9aa1b2;
+    --border:  #2c3142;
+    --shadow:  0 4px 18px rgba(0, 0, 0, 0.4);
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+/* ---------- Header / footer ---------- */
+.app-header {
+  text-align: center;
+  padding: 2rem 1rem 1rem;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+}
+
+.tagline {
+  margin: 0.25rem 0 0.75rem;
+  color: var(--muted);
+}
+
+.app-footer {
+  text-align: center;
+  padding: 1rem;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  background: var(--border);
+}
+
+.status-badge.ok    { background: #dcfce7; color: #166534; }
+.status-badge.error { background: #fee2e2; color: #991b1b; }
+
+/* ---------- Layout ---------- */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 1.25rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1rem 1rem;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.25rem 1.5rem;
+}
+
+.card h2 {
+  margin-top: 0;
+  font-size: 1.2rem;
+}
+
+.card.wide {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 760px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hint,
+.muted {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* ---------- Forms & inputs ---------- */
+.inline-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+input[type="text"],
+select {
+  flex: 1;
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  font: inherit;
+  color: inherit;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.hobby-picker label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  padding: 0.6rem 1.2rem;
+  font: inherit;
+  font-weight: 600;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.1s ease, filter 0.15s ease;
+}
+
+.btn:hover    { filter: brightness(1.1); }
+.btn:active   { transform: scale(0.97); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-secondary { background: var(--brand); }
+.btn-start     { background: var(--start); }
+.btn-pause     { background: var(--pause); }
+.btn-stop      { background: var(--stop); }
+
+/* ---------- Entrant list ---------- */
+.entrant-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.entrant-list li {
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+}
+
+.entrant-list li.selected {
+  border-color: var(--brand);
+  background: color-mix(in srgb, var(--brand) 12%, transparent);
+}
+
+/* ---------- Tracker ---------- */
+.hobby-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 170px;
+  margin: 1.25rem 0;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+}
+
+.hobby-emoji {
+  font-size: 4rem;
+  animation: bounce 1.6s ease-in-out infinite;
+}
+
+.timer-display {
+  font-family: var(--font-mono);
+  font-size: clamp(2.5rem, 8vw, 4rem);
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.encouragement {
+  text-align: center;
+  font-style: italic;
+  color: var(--muted);
+}
+
+/* ---------- Accumulated time table ---------- */
+.totals-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.totals-table th,
+.totals-table td {
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.totals-table td:last-child {
+  font-family: var(--font-mono);
+}
+
+/* ---------- Finish celebration dialog ---------- */
+.finish-dialog {
+  border: none;
+  border-radius: var(--radius);
+  padding: 2rem 2.5rem;
+  text-align: center;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+
+.finish-dialog::backdrop {
+  background: rgba(18, 20, 28, 0.6);
+}
+
+.confetti {
+  font-size: 2rem;
+  animation: pop 0.6s ease-out;
+}
+
+.finish-time {
+  font-family: var(--font-mono);
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0.5rem 0 1.25rem;
+}
+
+/* ---------- Animations ---------- */
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-14px); }
+}
+
+@keyframes pop {
+  from { transform: scale(0.3); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+/* Respect users who turn animations off in their OS settings. */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
