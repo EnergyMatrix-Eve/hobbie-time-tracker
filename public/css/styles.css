@@ -5,9 +5,10 @@
 
    1. Design tokens        6. Tracker screen
    2. Base & helpers       7. Hobby log
-   3. Scenery              8. Screen transition
+   3. Scenery              8. Screen transition & weather card
    4. Form controls        9. Finish dialog
-   5. Welcome screen      10. Animations & reduced motion
+   5. Welcome screen       9b. Weather scenes
+                          10. Animations & reduced motion
    ============================================================= */
 
 /* ---------- 1. Design tokens ---------- */
@@ -19,6 +20,15 @@
   --grass:        #8ad06a;
   --grass-dark:   #5fae47;
   --sand:         #f5e2a8;
+  --cloud:        #ffffff;
+  --hill-dots:    rgb(255 255 255 / 0.2);
+  --leaf:         #5fae47;   /* logo green: never changes with the weather */
+
+  /* The little island stage in the tracker card follows the weather too */
+  --stage-sky-top:    #bfeaff;
+  --stage-sky-bottom: #e6f7ff;
+  --stage-sea-top:    var(--sea);
+  --stage-sea-bottom: #45acd4;
 
   /* Panels & text */
   --cream:        #fff9e3;
@@ -123,7 +133,7 @@ body {
   left: 0;
   width: 180px;
   height: 56px;
-  background: #fff;
+  background: var(--cloud);
   border-radius: 999px;
   animation: drift linear infinite;
 }
@@ -132,7 +142,7 @@ body {
 .cloud::after {
   content: "";
   position: absolute;
-  background: #fff;
+  background: var(--cloud);
   border-radius: 50%;
 }
 
@@ -142,6 +152,9 @@ body {
 .cloud-1 { top: 15vh; animation-duration: 70s;  animation-delay: -12s; }
 .cloud-2 { top: 33vh; scale: 0.7;  animation-duration: 95s;  animation-delay: -55s; }
 .cloud-3 { top: 50vh; scale: 0.55; animation-duration: 120s; animation-delay: -85s; opacity: 0.85; }
+/* Extra clouds, only shown in cloudier weather (see "Weather scenes") */
+.cloud-4 { top: 6vh;  scale: 1.2;  animation-duration: 85s;  animation-delay: -30s; }
+.cloud-5 { top: 24vh; scale: 0.9;  animation-duration: 105s; animation-delay: -70s; }
 
 /* Rolling hills: two big rounded shapes with a dotted grass texture */
 .hills {
@@ -151,7 +164,7 @@ body {
   bottom: -18vh;
   height: 36vh;
   background-color: var(--grass);
-  background-image: radial-gradient(rgb(255 255 255 / 0.2) 3px, transparent 4px);
+  background-image: radial-gradient(var(--hill-dots) 3px, transparent 4px);
   background-size: 34px 34px;
   border-radius: 50% 50% 0 0 / 100% 100% 0 0;
 }
@@ -288,7 +301,7 @@ select {
 .logo-leaf {
   width: 76px;
   height: 76px;
-  color: var(--grass-dark);
+  color: var(--leaf);
   filter: drop-shadow(0 4px 0 var(--brown));
   animation: sway 3s ease-in-out infinite;
 }
@@ -375,6 +388,84 @@ select {
   min-height: 56px;
 }
 
+.name-form .btn-link {
+  flex-basis: 100%;
+}
+
+/* Returning players: one "chip" per saved name */
+.player-picker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.player-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  max-height: 228px;   /* lots of players → the list scrolls */
+  margin: 0;
+  padding: 4px 4px 10px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.player-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 54px;
+  padding: 6px 22px 6px 7px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.15rem;
+  color: var(--brown);
+  background: #fff;
+  border: 3px solid var(--cream-line);
+  border-radius: 999px;
+  box-shadow: 0 5px 0 var(--cream-line);
+  cursor: pointer;
+  transition: translate 0.15s var(--bounce), border-color 0.15s, box-shadow 0.15s;
+}
+
+.player-chip:hover         { translate: 0 -3px; border-color: var(--teal); }
+.player-chip:active        { translate: 0 3px; box-shadow: 0 2px 0 var(--cream-line); }
+.player-chip:focus-visible { outline: 4px solid var(--brown); outline-offset: 3px; }
+.player-chip:disabled      { opacity: 0.6; cursor: not-allowed; translate: 0 0; }
+
+.player-initial {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  font-weight: 700;
+  background: var(--chip-color, var(--yellow));
+  border-radius: 50%;
+}
+
+/* A quiet text-style button ("← Back to the list") */
+.btn-link {
+  padding: 8px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--teal);
+  background: none;
+  border: none;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.btn-link:focus-visible {
+  outline: 3px solid var(--brown);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
 /* Little bouncing "more" triangle, like a game dialogue box */
 .dialogue-next {
   position: absolute;
@@ -423,7 +514,7 @@ select {
 .brand-leaf {
   width: 36px;
   height: 36px;
-  color: var(--grass-dark);
+  color: var(--leaf);
   filter: drop-shadow(0 3px 0 var(--brown));
 }
 
@@ -469,13 +560,19 @@ select {
   padding: 8px 16px 48px;
 }
 
+/* A cream banner, so the text stays readable on any sky (day, night, rain…) */
 .greeting {
+  align-self: center;
   margin: 4px 0 0;
+  padding: 10px 28px;
   text-align: center;
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: clamp(1.4rem, 4vw, 2rem);
+  font-size: clamp(1.3rem, 4vw, 1.9rem);
   line-height: 1.3;
+  background: rgb(255 249 227 / 0.94);
+  border-radius: 28px;
+  box-shadow: 0 6px 0 rgb(224 205 152 / 0.9);
   animation: float-in 0.7s var(--bounce) both;
 }
 
@@ -539,7 +636,10 @@ select {
   margin: 26px 0 8px;
   overflow: hidden;
   border-radius: 28px;
-  background: linear-gradient(#bfeaff 0%, #e6f7ff 60%, var(--sea) 60%, #45acd4 100%);
+  background: linear-gradient(
+    var(--stage-sky-top) 0%, var(--stage-sky-bottom) 60%,
+    var(--stage-sea-top) 60%, var(--stage-sea-bottom) 100%
+  );
   box-shadow: inset 0 0 0 4px var(--cream-line);
 }
 
@@ -548,7 +648,7 @@ select {
   top: 52px;
   width: 90px;
   height: 28px;
-  background: #fff;
+  background: var(--cloud);
   border-radius: 999px;
   animation: drift-stage 18s linear infinite;
 }
@@ -560,7 +660,7 @@ select {
   top: -20px;
   width: 40px;
   height: 40px;
-  background: #fff;
+  background: var(--cloud);
   border-radius: 50%;
 }
 
@@ -763,10 +863,16 @@ select {
   position: fixed;
   inset: 0;
   z-index: 100;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  justify-content: safe center; /* never cut off the top of a tall card on short screens */
+  gap: 24px;
+  padding: 16px;
+  overflow-y: auto;
   visibility: hidden;
-  background-color: var(--grass-dark);
+  background-color: var(--leaf);
   background-image: radial-gradient(rgb(255 255 255 / 0.22) 6px, transparent 7px);
   background-size: 48px 48px;
   clip-path: circle(0% at 50% 50%);
@@ -777,10 +883,107 @@ select {
 }
 
 .transition-leaf {
+  flex: none;
   width: 120px;
   height: 120px;
   color: #fff;
   animation: spin 1.2s linear infinite;
+}
+
+/* The three looks of the overlay, switched by data-mode */
+.loading,
+.weather-card                                    { display: none; }
+.transition[data-mode="loading"] .loading        { display: block; }
+.transition[data-mode="weather"] .weather-card   { display: block; animation: pop-up 0.6s var(--bounce) both; }
+.transition[data-mode="weather"] .transition-leaf { display: none; }
+
+.loading {
+  text-align: center;
+}
+
+.loading-title {
+  display: inline-block;
+  margin: 0;
+  padding: 8px 24px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.3rem;
+  background: var(--cream);
+  border-radius: 999px;
+  box-shadow: 0 5px 0 var(--cream-shadow);
+}
+
+.loading-hint {
+  max-width: 380px;
+  margin: 16px auto 0;
+  padding: 10px 18px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  background: rgb(255 249 227 / 0.94);
+  border-radius: 20px;
+}
+
+/* Today's weather card */
+.weather-card {
+  position: relative;
+  flex: none;
+  width: min(400px, 100%);
+  margin-top: 22px;
+  padding: 46px 28px 30px;
+  text-align: center;
+  background: var(--cream);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 0 var(--cream-shadow), 0 24px 40px rgb(30 60 20 / 0.25);
+}
+
+.weather-card .dialogue-tag {
+  left: 50%;
+  translate: -50% 0;
+  white-space: nowrap;
+}
+
+.weather-card p {
+  margin: 0;
+}
+
+.weather-icon {
+  display: block;
+  font-size: 84px;
+  line-height: 1.15;
+  animation: bob 2.4s ease-in-out infinite;
+}
+
+.weather-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.7rem;
+}
+
+.weather-temp {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 3.4rem;
+  line-height: 1.1;
+  color: var(--teal);
+}
+
+.weather-range {
+  font-weight: 800;
+  color: var(--brown-soft);
+}
+
+.weather-place {
+  margin-bottom: 16px !important;
+  font-size: 0.95rem;
+  color: var(--brown-soft);
+}
+
+.weather-line {
+  margin-bottom: 20px !important;
+  padding: 12px 18px;
+  font-weight: 700;
+  background: #fff;
+  border-radius: 20px;
 }
 
 /* ---------- 9. Finish dialog ---------- */
@@ -868,6 +1071,186 @@ select {
 .confetti i:nth-child(11) { left: 86%; background: var(--amber);  --dx:  30px; animation-delay: 0.10s; }
 .confetti i:nth-child(12) { left: 94%; background: var(--teal);   --dx:  60px; animation-delay: 0.30s; }
 
+/* ---------- 9b. Weather scenes ----------
+   app.js sets two attributes on <body> after checking the weather:
+     data-weather = clear | partly-cloudy | cloudy | fog | rain | storm | snow
+     data-daytime = day | night
+   With neither set (the welcome screen on first load) you get a sunny day. */
+
+/* Hidden unless a scene below turns them on */
+.stars, .moon, .fog, .precip, .flash, .cloud-4, .cloud-5 {
+  display: none;
+}
+
+/* -- Colours per weather (daytime) -- */
+body[data-weather="cloudy"] {
+  --sky-top: #a3b9ca;  --sky-bottom: #e0e8ee;  --cloud: #f4f7f9;
+  --stage-sky-top: #c9d6e0;  --stage-sky-bottom: #e9eff3;
+  --stage-sea-top: #7fb3cc;  --stage-sea-bottom: #5d97b3;
+}
+
+body[data-weather="fog"] {
+  --sky-top: #bfcad2;  --sky-bottom: #eef2f4;  --cloud: #f7f9fa;
+  --stage-sky-top: #d3dbe0;  --stage-sky-bottom: #eef2f4;
+  --stage-sea-top: #9cbccb;  --stage-sea-bottom: #82a6b8;
+}
+
+body[data-weather="rain"] {
+  --sky-top: #7f9bb1;  --sky-bottom: #cad7e0;  --cloud: #e2e8ed;
+  --grass: #7bbd5e;    --grass-dark: #54993f;
+  --stage-sky-top: #a7bccb;  --stage-sky-bottom: #d2dde5;
+  --stage-sea-top: #6aa3be;  --stage-sea-bottom: #4f88a5;
+}
+
+body[data-weather="storm"] {
+  --sky-top: #55687b;  --sky-bottom: #9cadba;  --cloud: #bcc6cf;
+  --grass: #6aa851;    --grass-dark: #478a37;
+  --stage-sky-top: #7a8c9b;  --stage-sky-bottom: #aab8c3;
+  --stage-sea-top: #557f98;  --stage-sea-bottom: #3f667d;
+}
+
+body[data-weather="snow"] {
+  --sky-top: #b5d0e4;  --sky-bottom: #d8e7f2;
+  --grass: #fbfdff;    --grass-dark: #dfe9f1;  --hill-dots: rgb(140 170 200 / 0.25);
+  --stage-sky-top: #cfe2f0;  --stage-sky-bottom: #edf5fa;
+  --stage-sea-top: #8cc3dd;  --stage-sea-bottom: #6aa9c7;
+}
+
+/* -- Night: comes after the weather rules, so it wins on sky colours -- */
+body[data-daytime="night"] {
+  --sky-top: #16224a;  --sky-bottom: #3a4d84;  --cloud: #9aa7cc;
+  --grass: #3f7c4c;    --grass-dark: #2d5d3a;  --hill-dots: rgb(255 255 255 / 0.08);
+  --stage-sky-top: #1d2b5a;  --stage-sky-bottom: #40548e;
+  --stage-sea-top: #295583;  --stage-sea-bottom: #1b3d62;
+}
+
+/* Overcast nights are greyer and starless */
+body[data-daytime="night"]:is([data-weather="cloudy"], [data-weather="fog"],
+                              [data-weather="rain"], [data-weather="storm"]) {
+  --sky-top: #1e283b;  --sky-bottom: #46536b;  --cloud: #7c879c;
+}
+
+body[data-daytime="night"][data-weather="snow"] {
+  --sky-top: #24325a;  --sky-bottom: #5a6d9a;
+  --grass: #cfd9ec;    --grass-dark: #aebcd6;  --hill-dots: rgb(255 255 255 / 0.3);
+}
+
+/* -- Which pieces appear -- */
+body[data-weather="partly-cloudy"] .cloud-4,
+body:is([data-weather="cloudy"], [data-weather="fog"], [data-weather="rain"],
+        [data-weather="storm"], [data-weather="snow"]) :is(.cloud-4, .cloud-5) {
+  display: block;
+}
+
+body:is([data-weather="cloudy"], [data-weather="fog"], [data-weather="rain"],
+        [data-weather="storm"], [data-weather="snow"]) .sun,
+body[data-daytime="night"] .sun {
+  display: none;
+}
+
+/* Moon and stars only on clear-ish nights */
+body[data-daytime="night"]:is([data-weather="clear"], [data-weather="partly-cloudy"],
+                              [data-weather="unknown"]) :is(.moon, .stars) {
+  display: block;
+}
+
+body[data-daytime="night"] .cloud {
+  opacity: 0.6;
+}
+
+/* -- Stars: three layers of tiled dots, gently twinkling -- */
+.stars {
+  position: absolute;
+  inset: 0 0 35% 0;
+  background-image:
+    radial-gradient(circle at 20px 30px, #fff 1.5px, transparent 2.5px),
+    radial-gradient(circle at 90px 70px, rgb(255 255 255 / 0.8) 1px, transparent 2px),
+    radial-gradient(circle at 140px 20px, #fff6c8 2px, transparent 3px);
+  background-size: 160px 110px, 230px 150px, 300px 190px;
+  animation: twinkle 4s ease-in-out infinite alternate;
+}
+
+/* -- Moon: a circle whose inset shadow draws a crescent -- */
+.moon {
+  position: absolute;
+  top: 8vh;
+  right: 10vw;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  box-shadow: inset -26px 12px 0 0 #fff4c2;
+  filter: drop-shadow(0 0 22px rgb(255 244 194 / 0.45));
+}
+
+/* -- Fog: two wide, blurred bands drifting slowly -- */
+.fog {
+  position: absolute;
+  inset: 0;
+}
+
+.fog::before,
+.fog::after {
+  content: "";
+  position: absolute;
+  left: -50%;
+  width: 200%;
+  height: 26vh;
+  background: rgb(255 255 255 / 0.6);
+  border-radius: 50%;
+  filter: blur(24px);
+  animation: fog-drift 40s ease-in-out infinite alternate;
+}
+
+.fog::before { top: 28vh; }
+.fog::after  { top: 55vh; animation-duration: 55s; animation-direction: alternate-reverse; }
+
+body[data-weather="fog"] .fog {
+  display: block;
+}
+
+/* -- Rain & snow: tiled drops/flakes; moving the tiles down makes them fall -- */
+.precip {
+  position: absolute;
+  inset: -20%;
+}
+
+body:is([data-weather="rain"], [data-weather="storm"]) .precip {
+  display: block;
+  rotate: 10deg;  /* slanted rain */
+  background-image:
+    radial-gradient(1.5px 14px at 20px 20px, rgb(255 255 255 / 0.75) 98%, transparent 100%),
+    radial-gradient(1.2px 10px at 55px 60px, rgb(255 255 255 / 0.5) 98%, transparent 100%);
+  background-size: 70px 110px, 50px 80px;
+  animation: rain-fall 0.8s linear infinite;
+}
+
+body[data-weather="storm"] .precip {
+  animation-duration: 0.5s;
+}
+
+body[data-weather="snow"] .precip {
+  display: block;
+  background-image:
+    radial-gradient(circle at 20px 30px, #fff 3px, transparent 4px),
+    radial-gradient(circle at 70px 90px, rgb(255 255 255 / 0.85) 2px, transparent 3px),
+    radial-gradient(circle at 40px 60px, rgb(255 255 255 / 0.7) 4px, transparent 5px);
+  background-size: 90px 120px, 140px 200px, 110px 150px;
+  animation: snow-fall 20s linear infinite, snow-sway 4s ease-in-out infinite alternate;
+}
+
+/* -- Lightning: two quick flashes every 9 seconds (well under 3 flashes/second) -- */
+.flash {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+  animation: lightning 9s linear infinite;
+}
+
+body[data-weather="storm"] .flash {
+  display: block;
+}
+
 /* ---------- 10. Animations ---------- */
 @keyframes drift       { from { translate: -280px 0; } to { translate: calc(100vw + 280px) 0; } }
 @keyframes drift-stage { from { left: -120px; } to { left: 110%; } }
@@ -902,6 +1285,20 @@ select {
   100% { opacity: 0; translate: var(--dx) 280px; rotate: 540deg; }
 }
 
+/* Each distance is a whole number of tiles (880 = 8×110 = 11×80), so the loop is seamless */
+@keyframes rain-fall { to { background-position: 0 880px, 0 880px; } }
+/* Different distances per layer = different speeds = depth */
+@keyframes snow-fall { to { background-position: 0 1200px, 0 600px, 0 900px; } }
+@keyframes snow-sway { from { translate: -15px 0; } to { translate: 15px 0; } }
+@keyframes fog-drift { from { translate: -10% 0; } to { translate: 10% 0; } }
+@keyframes twinkle   { from { opacity: 0.6; } to { opacity: 1; } }
+
+@keyframes lightning {
+  0%, 90%, 92.5%, 94.5%, 100% { opacity: 0; }
+  91%   { opacity: 0.55; }
+  93.5% { opacity: 0.35; }
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 600px) {
   .hobby-picker { grid-template-columns: minmax(0, 1fr); }
@@ -912,6 +1309,9 @@ select {
   .controls .btn { min-width: 0; flex: 1 1 100px; padding: 10px 14px; }
   .speech-avatar { display: none; }
   .speech-text::before { display: none; }
+  .player-chip  { font-size: 1.05rem; padding-right: 18px; }
+  .weather-icon { font-size: 68px; }
+  .weather-temp { font-size: 2.8rem; }
 }
 
 /* Respect users who turn animations off in their OS settings:
@@ -927,5 +1327,7 @@ select {
   .cloud-1 { translate: 8vw 0; }
   .cloud-2 { translate: 58vw 0; }
   .cloud-3 { translate: 30vw 0; }
+  .cloud-4 { translate: 40vw 0; }
+  .cloud-5 { translate: 78vw 0; }
   .stage-cloud { left: 15%; }
 }

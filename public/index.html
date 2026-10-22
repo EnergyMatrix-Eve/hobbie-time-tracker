@@ -36,13 +36,21 @@
     </symbol>
   </svg>
 
-  <!-- Sky, sun, drifting clouds and hills behind both screens -->
+  <!-- Sky scene behind both screens. app.js sets data-weather / data-daytime
+       on <body>, and the CSS shows the matching pieces (sun or moon, rain, snow…). -->
   <div class="scenery" aria-hidden="true">
+    <div class="stars"></div>
     <div class="sun"></div>
+    <div class="moon"></div>
     <div class="cloud cloud-1"></div>
     <div class="cloud cloud-2"></div>
     <div class="cloud cloud-3"></div>
+    <div class="cloud cloud-4"></div>
+    <div class="cloud cloud-5"></div>
+    <div class="fog"></div>
     <div class="hills"></div>
+    <div class="precip"></div>
+    <div class="flash"></div>
   </div>
 
   <!-- ================= SCREEN 1: WELCOME (enter your name) ================= -->
@@ -65,10 +73,18 @@
         <span id="welcome-line" aria-hidden="true"></span>
       </p>
 
-      <form id="name-form" class="name-form" novalidate>
+      <!-- Returning players: pick a saved name -->
+      <div id="player-picker" class="player-picker" hidden>
+        <ul id="player-list" class="player-list" aria-label="Saved players"></ul>
+        <button id="btn-new-player" class="btn btn-small" type="button">+ I'm new here</button>
+      </div>
+
+      <!-- First-time players: type a name -->
+      <form id="name-form" class="name-form" novalidate hidden>
         <label for="player-name" class="sr-only">Your name</label>
-        <input id="player-name" type="text" maxlength="20" placeholder="Type your name…" autocomplete="off" autofocus>
+        <input id="player-name" type="text" maxlength="20" placeholder="Type your name…" autocomplete="off">
         <button type="submit" class="btn btn-teal">That's me!</button>
+        <button id="btn-back-to-list" class="btn-link" type="button" hidden>← Back to the list</button>
       </form>
 
       <span class="dialogue-next" aria-hidden="true"></span>
@@ -83,6 +99,7 @@
         Hobbies Time Tracker
       </div>
       <div class="topbar-right">
+        <span id="weather-pill" class="status-pill" hidden></span>
         <span id="api-status" class="status-pill">Checking island server…</span>
         <button id="btn-switch" class="btn btn-small" type="button">Switch player</button>
       </div>
@@ -172,9 +189,29 @@
     </footer>
   </div>
 
-  <!-- Full-screen circle wipe used when switching screens -->
-  <div id="transition" class="transition" aria-hidden="true">
-    <svg class="transition-leaf"><use href="#icon-leaf"/></svg>
+  <!-- Full-screen circle wipe used when switching screens.
+       When entering the tracker it doubles as the loading page that shows today's weather.
+       data-mode: "plain" (just the leaf) | "loading" (checking…) | "weather" (the weather card) -->
+  <div id="transition" class="transition" data-mode="plain">
+    <svg class="transition-leaf" aria-hidden="true"><use href="#icon-leaf"/></svg>
+
+    <p id="weather-announce" class="sr-only" aria-live="polite"></p>
+
+    <div class="loading" aria-hidden="true">
+      <p class="loading-title">Checking today's weather…</p>
+      <p id="loading-hint" class="loading-hint" hidden></p>
+    </div>
+
+    <div class="weather-card">
+      <span class="dialogue-tag">Today's weather</span>
+      <span id="weather-icon" class="weather-icon" aria-hidden="true">☀️</span>
+      <p id="weather-label" class="weather-label">Sunny</p>
+      <p id="weather-temp" class="weather-temp">20°C</p>
+      <p id="weather-range" class="weather-range">High 24° · Low 15°</p>
+      <p id="weather-place" class="weather-place">Your location</p>
+      <p id="weather-line" class="weather-line">What a sunny day!</p>
+      <button id="btn-go" class="btn btn-start" type="button">Let's go!</button>
+    </div>
   </div>
 
   <!-- ================= FINISH CELEBRATION (shown when Stop is pressed) ================= -->

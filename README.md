@@ -1,10 +1,10 @@
 # ⏱️ Hobbies Time Tracker
 
-Track the time people spend on their hobbies. Tell the island guide your name, pick (or add) a hobby, press **Start**, and watch the timer run. **Pause** or **Stop** at any time, and finish with a celebration screen.
+Track the time people spend on their hobbies. Tell the island guide your name the first time (after that, just pick it from the list). A loading page shows **today's weather**, and the island's sky matches it: sun, clouds, rain, snow, fog, storms, day or night. Then pick (or add) a hobby, press **Start**, and watch the timer run. **Pause** or **Stop** at any time, and finish with a celebration screen.
 
 The look is a cozy island theme inspired by Animal Crossing: sky and clouds, cream panels, rounded type and bouncy motion. All artwork is original CSS/SVG, with no Nintendo assets.
 
-> **Status: v0.2.** The welcome (name entry) screen, the screen transition and the themed tracker UI are done. The API routes still return **placeholder** data, and the timer buttons are stubs. Look for `TODO` comments to see what comes next.
+> **Status: v0.3.** Players are saved in the database and remembered. The weather loading page and weather-reactive backgrounds are done. Hobbies, time entries and the timer are still **placeholders**. Look for `TODO` comments to see what comes next.
 
 ---
 
@@ -16,6 +16,7 @@ The look is a cozy island theme inspired by Animal Crossing: sky and clouds, cre
 | Fonts     | [Fredoka](https://fonts.google.com/specimen/Fredoka) and [Nunito](https://fonts.google.com/specimen/Nunito) from Google Fonts | Rounded, friendly type. Needs internet; offline it falls back to system fonts. |
 | Back end  | [Node.js](https://nodejs.org) 22+ with [Express 5](https://expressjs.com) | Small, popular web server for JSON APIs. |
 | Database  | [SQLite](https://sqlite.org) via [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) | A single file on disk. No database server to install. |
+| Weather   | [Open-Meteo](https://open-meteo.com) | Free, and no account or API key needed. Called from the browser. |
 
 ---
 
@@ -37,11 +38,13 @@ hobbie-time-tracker/
 │       └── time.js       ← GET  /api/time
 └── public/               ← FRONT END (runs in the browser)
     ├── index.html        ← page layout
-    ├── css/styles.css    ← styling
-    └── js/app.js         ← calls the API and updates the page
+    ├── css/styles.css    ← styling, including the weather scenes
+    └── js/
+        ├── app.js        ← screens, player list, calls the API, updates the page
+        └── weather.js    ← today's weather: location, Open-Meteo, weather codes
 ```
 
-**How a request flows:** the browser loads `index.html` → `app.js` calls `fetch('/api/entrants')` → Express routes it to `server/routes/entrants.js` → (later) that route queries SQLite → JSON goes back → `app.js` renders it on the page.
+**How a request flows:** the browser loads `index.html` → `app.js` calls `fetch('/api/entrants')` → Express routes it to `server/routes/entrants.js` → that route queries SQLite → JSON goes back → `app.js` shows the players on the page.
 
 ---
 
@@ -88,11 +91,14 @@ SQLite database: .../hobbie-time-tracker/data/hobbies.db
 
 Go to **<http://localhost:3000>** in your browser.
 
-1. The welcome screen opens and **Tracky** (the island guide) asks for your name.
-2. Type it and press **Enter** (or click **That's me!**). A leafy circle wipe takes you to the tracker.
-3. The top bar should show a green dot with **Island server online**. Hover over it to see the database tables.
+1. The welcome screen opens and **Tracky** (the island guide) greets you.
+   - **First time:** type your name and press **Enter** (or click **That's me!**). Tracky remembers it.
+   - **After that:** click your name in the list. New people click **+ I'm new here**.
+2. A leafy circle wipe opens the **loading page**, which shows today's weather. The first time, your browser asks to use your location: **Allow** gives your local weather, **Block** uses the fallback city (see [Weather](#weather)).
+3. After a few seconds (or click **Let's go!**) the tracker opens, with the sky matching the weather.
+4. The top bar shows the weather and a green dot with **Island server online**. Hover over them for details.
 
-Click **Switch player** in the top bar to go back and enter a different name.
+Click **Switch player** in the top bar to go back and pick someone else.
 
 ### 6. Stop the server
 
@@ -127,10 +133,16 @@ $env:PORT=3001; npm run dev
 | Method | Endpoint         | Purpose                               | Body (JSON)            |
 |--------|------------------|---------------------------------------|------------------------|
 | GET    | `/api/health`    | Server + database check (real query)  | –                      |
-| GET    | `/api/entrants`  | List entrants                         | –                      |
-| POST   | `/api/entrants`  | Add an entrant                        | `{ "name": "Alex" }`   |
-| POST   | `/api/hobbie`    | Add a hobby                           | `{ "name": "Guitar" }` |
-| GET    | `/api/time`      | Accumulated time per entrant & hobby  | –                      |
+| GET    | `/api/entrants`  | List saved players (real)             | –                      |
+| POST   | `/api/entrants`  | Add a player (real), see below        | `{ "name": "Alex" }`   |
+| POST   | `/api/hobbie`    | Add a hobby (placeholder)             | `{ "name": "Guitar" }` |
+| GET    | `/api/time`      | Accumulated time per player & hobby (placeholder) | –          |
+
+`POST /api/entrants` returns the player as `{ "id", "name", "created_at" }`:
+
+- **201 Created:** a new player was saved.
+- **200 OK:** that name already exists (matching ignores upper/lower case), so you get the existing player back, not a duplicate.
+- **400 Bad Request:** the name is empty or longer than 20 characters.
 
 ### Try the API from the terminal (while the server is running)
 
@@ -176,6 +188,16 @@ Timestamps are stored in **UTC**. Convert to local time when displaying.
 
 ---
 
+## Weather
+
+- **Where it comes from:** [Open-Meteo](https://open-meteo.com), free with no key. `public/js/weather.js` calls it straight from the browser. The browser already knows how to get through office proxies and certificates, and there's no secret key to protect.
+- **Location:** the browser asks permission once. Your position is rounded to about 1 km before it's sent, which is plenty for weather.
+- **Fallback city:** if location is blocked or unavailable, the app shows the weather for **Sydney**. To change it, edit `FALLBACK_LOCATION` at the top of `public/js/weather.js` (find your coordinates by searching your city on open-meteo.com), then refresh the browser.
+- **Scenes:** clear, partly cloudy, cloudy, fog, rain, storm and snow, each by day or night. "Night" uses that location's sunrise and sunset. If the weather can't be loaded, the app says so and picks day or night from your computer's clock.
+- Results are reused for 10 minutes, so switching players doesn't re-check the weather each time.
+
+---
+
 ## Troubleshooting
 
 | Problem | Fix |
@@ -186,6 +208,9 @@ Timestamps are stored in **UTC**. Convert to local time when displaying.
 | `npm` / `node` not recognised (Windows) | Close and reopen the terminal after installing Node so it picks up the new PATH. |
 | Top bar says **Island server offline** | Make sure you opened `http://localhost:3000` (served by Node), not the `index.html` file directly from disk. |
 | Text looks plain instead of rounded | The Google Fonts couldn't load (no internet or blocked by a firewall). The app still works with system fonts. |
+| Loading page says **Weather unavailable** | The browser couldn't reach `api.open-meteo.com` (no internet, or a work firewall blocks it). The app still works; the sky follows your clock instead. Press F12 → **Console** to see the exact error. |
+| Weather shows the fallback city instead of where you are | Location was blocked. In Chrome/Edge, click the icon left of the address bar → **Location** → **Allow**, then reload. On Windows, also check **Settings → Privacy & security → Location**. |
+| Want to remove saved players | Players live in the database: stop the server and reset the database (see [Database](#database)). |
 | Changes to the page don't show | Hard refresh: **Ctrl + Shift + R** (Windows) / **Cmd + Shift + R** (macOS). |
 
 ---
@@ -194,8 +219,9 @@ Timestamps are stored in **UTC**. Convert to local time when displaying.
 
 - [x] Welcome screen: enter your name, then a smooth transition into the tracker
 - [x] Cozy island theme (Animal Crossing-inspired)
-- [ ] Save the player's name via `POST /api/entrants` (see `TODO` in `public/js/app.js`)
-- [ ] Replace placeholder routes with real SQLite queries (see `TODO`s in `server/routes/`)
+- [x] Remember players in the database; returning players pick their name
+- [x] Loading page with today's weather; weather-reactive backgrounds (day and night)
+- [ ] Replace the remaining placeholder routes (`/api/hobbie`, `/api/time`) with real SQLite queries
 - [ ] Working timer: start / pause / resume / stop
 - [ ] Save finished sessions to `time_entries`
 - [ ] "Cool" finish display and hobby animations
